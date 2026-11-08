@@ -143,25 +143,25 @@ def download_media(url, quality, folder):
     output = str(Path(folder) / "media.%(ext)s")
 
     if quality == "mp3":
-    format_string = "bestaudio/best"
-    postprocessors = [
-        {
-            "key": "FFmpegExtractAudio",
-            "preferredcodec": "mp3",
-            "preferredquality": "192"
-        }
-    ]
-else:
-    format_string = (
-        f"bestvideo[height<={quality}]+bestaudio/"
-        f"best[height<={quality}]/best"
-    )
-    postprocessors = [
-        {
-            "key": "FFmpegVideoRemuxer",
-            "preferedformat": "mp4"
-        }
-    ]
+        format_string = "bestaudio/best"
+        postprocessors = [
+            {
+                "key": "FFmpegExtractAudio",
+                "preferredcodec": "mp3",
+                "preferredquality": "192"
+            }
+        ]
+    else:
+        format_string = (
+            f"bestvideo[height<={quality}]+bestaudio/"
+            f"best[height<={quality}]/best"
+        )
+        postprocessors = [
+            {
+                "key": "FFmpegVideoRemuxer",
+                "preferedformat": "mp4"
+            }
+        ]
 
     options = {
         "format": format_string,
