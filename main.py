@@ -85,6 +85,9 @@ def extract_info(url):
             "retries": 3,
             "extract_flat": False,
             "ignore_no_formats_error": True,
+            "quiet": False,
+            "no_warnings": False,
+            "verbose": True,
             "js_runtimes": {
                 "deno": {
                     "path": DENO_PATH
@@ -223,6 +226,9 @@ def download_media(url, quality, folder):
     "ffmpeg_location": FFMPEG_PATH,
     "postprocessors": postprocessors,
     "overwrites": True,
+    "quiet": False,
+    "no_warnings": False,
+    "verbose": True,
 
     "js_runtimes": {
         "deno": {
