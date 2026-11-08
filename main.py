@@ -29,7 +29,7 @@ WEBHOOK_SECRET = os.getenv(
     "WEBHOOK_SECRET",
     secrets.token_urlsafe(32)
 )
-
+COOKIE_FILE = "/etc/secrets/youtube_cookies.txt"
 FFMPEG_PATH = imageio_ffmpeg.get_ffmpeg_exe()
 MAX_FILE_SIZE = 49 * 1024 * 1024
 
@@ -62,6 +62,7 @@ def extract_info(url):
         "noplaylist": True,
         "socket_timeout": 25,
         "ffmpeg_location": FFMPEG_PATH,
+        "cookiefile": COOKIE_FILE,
     }
 
     with yt_dlp.YoutubeDL(options) as ydl:
@@ -160,6 +161,7 @@ def download_media(url, quality, folder):
         "merge_output_format": "mp4",
         "postprocessors": postprocessors,
         "overwrites": True,
+        "cookiefile": COOKIE_FILE,
     }
 
     with yt_dlp.YoutubeDL(options) as ydl:
