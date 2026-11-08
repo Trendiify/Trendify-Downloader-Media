@@ -53,7 +53,7 @@ def find_deno():
     return None
 
 
-DENO_PATH = find_deno()
+DENO_PATH = find_deno() or "/opt/render/project/src/.deno/bin/deno"
 
 
 def base_options(folder):
