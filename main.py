@@ -82,7 +82,9 @@ def extract_info(url):
             "no_warnings": True,
             "noplaylist": True,
             "socket_timeout": 45,
+            "retries": 3,
             "extract_flat": False,
+            "ignore_no_formats_error": True,
             "js_runtimes": {
                 "deno": {
                     "path": DENO_PATH
@@ -93,8 +95,30 @@ def extract_info(url):
         load_cookies(options, temp_dir)
 
         with yt_dlp.YoutubeDL(options) as ydl:
-            return ydl.extract_info(url, download=False)
+            info = ydl.extract_info(url, download=False)
 
+            if not info:
+                raise Exception("YouTube returned no video information")
+
+            formats = info.get("formats") or []
+
+            logger.info(
+                "YouTube extraction: title=%s | formats=%s",
+                info.get("title"),
+                len(formats)
+            )
+
+            for fmt in formats:
+                logger.info(
+                    "FORMAT: id=%s | ext=%s | height=%s | audio=%s | video=%s",
+                    fmt.get("format_id"),
+                    fmt.get("ext"),
+                    fmt.get("height"),
+                    fmt.get("acodec"),
+                    fmt.get("vcodec")
+                )
+
+            return info
     
 
 # ================= MESSAGE HANDLER =================
