@@ -41,7 +41,26 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
+def load_cookies(options, folder):
+    if not os.path.isfile(COOKIE_FILE):
+        logger.warning("YouTube cookies NOT FOUND: %s", COOKIE_FILE)
+        return
 
+    temp_cookie = os.path.join(folder, "cookies.txt")
+    shutil.copyfile(COOKIE_FILE, temp_cookie)
+
+    cookie_size = os.path.getsize(temp_cookie)
+
+    if cookie_size == 0:
+        logger.error("YouTube cookie file is EMPTY")
+        return
+
+    options["cookiefile"] = temp_cookie
+
+    logger.info(
+        "YouTube cookies loaded successfully. Size: %s bytes",
+        cookie_size
+    )
 # ================= START =================
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -65,10 +84,7 @@ def extract_info(url):
             "extract_flat": False,
         }
 
-        if os.path.isfile(COOKIE_FILE):
-            temp_cookie = os.path.join(temp_dir, "cookies.txt")
-            shutil.copyfile(COOKIE_FILE, temp_cookie)
-            options["cookiefile"] = temp_cookie
+        load_cookies(options, temp_dir)
 
         with yt_dlp.YoutubeDL(options) as ydl:
             return ydl.extract_info(url, download=False)
@@ -178,10 +194,7 @@ def download_media(url, quality, folder):
         "overwrites": True,
     }
 
-    if os.path.isfile(COOKIE_FILE):
-        temp_cookie = os.path.join(folder, "cookies.txt")
-        shutil.copyfile(COOKIE_FILE, temp_cookie)
-        options["cookiefile"] = temp_cookie
+    load_cookies(options, folder)
 
     with yt_dlp.YoutubeDL(options) as ydl:
         ydl.download([url])
