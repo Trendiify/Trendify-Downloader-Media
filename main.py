@@ -78,14 +78,16 @@ async def handle_message(
     url = update.message.text.strip()
 
     if not url.startswith(("https://", "http://")):
-        await update.message.reply_text("❌ لطفاً یک لینک معتبر ارسال کن.")
+        await update.message.reply_text(
+            "❌ لطفاً یک لینک معتبر ارسال کن."
+        )
         return
 
     msg = await update.message.reply_text(
         "⏳ در حال بررسی لینک..."
     )
 
-        try:
+    try:
         info = await asyncio.to_thread(extract_info, url)
 
         title = info.get("title") or "Media"
@@ -113,7 +115,7 @@ async def handle_message(
         )
 
     except Exception as e:
-        logger.exception("YouTube extraction failed")
+        logger.exception("Media extraction failed")
 
         await msg.edit_text(
             f"❌ خطای استخراج:\n\n{str(e)[:1500]}"
