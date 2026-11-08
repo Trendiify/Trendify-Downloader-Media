@@ -77,7 +77,69 @@ def extract_info(url):
         with yt_dlp.YoutubeDL(options) as ydl:
             return ydl.extract_info(url, download=False)
 
+# ================= MESSAGE HANDLER =================
 
+async def handle_message(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE
+):
+    if not update.message or not update.message.text:
+        return
+
+    url = update.message.text.strip()
+
+    if not url.startswith(("https://", "http://")):
+        await update.message.reply_text(
+            "❌ لطفاً لینک معتبر ارسال کن."
+        )
+        return
+
+    msg = await update.message.reply_text(
+        "⏳ در حال بررسی لینک..."
+    )
+
+    try:
+        info = await asyncio.to_thread(
+            extract_info,
+            url
+        )
+
+        title = info.get("title") or "Media"
+
+        context.user_data["url"] = url
+
+        keyboard = [
+            [
+                InlineKeyboardButton(
+                    "1080p", callback_data="1080"
+                ),
+                InlineKeyboardButton(
+                    "720p", callback_data="720"
+                ),
+                InlineKeyboardButton(
+                    "480p", callback_data="480"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "🎵 دانلود MP3",
+                    callback_data="mp3"
+                )
+            ]
+        ]
+
+        await msg.edit_text(
+            f"📌 {title}\n\n"
+            "کیفیت مورد نظر را انتخاب کن:",
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+
+    except Exception as e:
+        logger.exception("Media extraction failed")
+
+        await msg.edit_text(
+            f"❌ خطای استخراج:\n\n{str(e)[:1200]}"
+        )
 # ================= DOWNLOAD ENGINE =================
 
 def download_media(url, quality, folder):
@@ -97,6 +159,7 @@ def download_media(url, quality, folder):
 
     else:
         format_string = (
+            f"bestvideo[height<={quality}]+bestaudio/"
             f"best[height<={quality}]/best"
         )
         postprocessors = []
