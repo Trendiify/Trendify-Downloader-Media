@@ -31,6 +31,7 @@ WEBHOOK_SECRET = os.getenv(
     secrets.token_urlsafe(32)
 )
 COOKIE_FILE = "/etc/secrets/youtube_cookies.txt"
+DENO_PATH = str(Path.home() / ".deno" / "bin" / "deno")
 FFMPEG_PATH = imageio_ffmpeg.get_ffmpeg_exe()
 MAX_FILE_SIZE = 49 * 1024 * 1024
 
@@ -82,12 +83,19 @@ def extract_info(url):
             "noplaylist": True,
             "socket_timeout": 45,
             "extract_flat": False,
+            "js_runtimes": {
+                "deno": {
+                    "path": DENO_PATH
+                }
+            },
         }
 
         load_cookies(options, temp_dir)
 
         with yt_dlp.YoutubeDL(options) as ydl:
             return ydl.extract_info(url, download=False)
+
+    
 
 # ================= MESSAGE HANDLER =================
 
@@ -180,20 +188,25 @@ def download_media(url, quality, folder):
         ]
 
     options = {
-        "format": format_string,
-        "outtmpl": output,
-        "quiet": True,
-        "no_warnings": True,
-        "noplaylist": True,
-        "socket_timeout": 30,
-        "retries": 3,
-        "fragment_retries": 3,
-        "max_filesize": MAX_FILE_SIZE,
-        "ffmpeg_location": FFMPEG_PATH,
-        "postprocessors": postprocessors,
-        "overwrites": True,
-    }
+    "format": format_string,
+    "outtmpl": output,
+    "quiet": True,
+    "no_warnings": True,
+    "noplaylist": True,
+    "socket_timeout": 30,
+    "retries": 3,
+    "fragment_retries": 3,
+    "max_filesize": MAX_FILE_SIZE,
+    "ffmpeg_location": FFMPEG_PATH,
+    "postprocessors": postprocessors,
+    "overwrites": True,
 
+    "js_runtimes": {
+        "deno": {
+            "path": DENO_PATH
+        }
+    },
+}
     load_cookies(options, folder)
 
     with yt_dlp.YoutubeDL(options) as ydl:
