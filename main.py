@@ -57,20 +57,16 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ================= DOWNLOAD INFO =================
 def extract_info(url):
     with tempfile.TemporaryDirectory() as temp_dir:
-
         options = {
             "quiet": True,
             "no_warnings": True,
             "noplaylist": True,
-            "socket_timeout": 30,
-            "ffmpeg_location": FFMPEG_PATH,
-            "format": "best/bestvideo+bestaudio",
+            "socket_timeout": 45,
+            "extract_flat": False,
         }
 
         if os.path.isfile(COOKIE_FILE):
-            temp_cookie = os.path.join(
-                temp_dir, "cookies.txt"
-            )
+            temp_cookie = os.path.join(temp_dir, "cookies.txt")
             shutil.copyfile(COOKIE_FILE, temp_cookie)
             options["cookiefile"] = temp_cookie
 
@@ -147,22 +143,25 @@ def download_media(url, quality, folder):
     output = str(Path(folder) / "media.%(ext)s")
 
     if quality == "mp3":
-        format_string = "bestaudio/best"
-
-        postprocessors = [
-            {
-                "key": "FFmpegExtractAudio",
-                "preferredcodec": "mp3",
-                "preferredquality": "192",
-            }
-        ]
-
-    else:
-        format_string = (
-            f"bestvideo[height<={quality}]+bestaudio/"
-            f"best[height<={quality}]/best"
-        )
-        postprocessors = []
+    format_string = "bestaudio/best"
+    postprocessors = [
+        {
+            "key": "FFmpegExtractAudio",
+            "preferredcodec": "mp3",
+            "preferredquality": "192"
+        }
+    ]
+else:
+    format_string = (
+        f"bestvideo[height<={quality}]+bestaudio/"
+        f"best[height<={quality}]/best"
+    )
+    postprocessors = [
+        {
+            "key": "FFmpegVideoRemuxer",
+            "preferedformat": "mp4"
+        }
+    ]
 
     options = {
         "format": format_string,
