@@ -112,13 +112,12 @@ async def handle_message(
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
 
-    except Exception:
-        logger.exception("Metadata extraction failed")
+    except Exception as e:
+    logger.exception("YouTube extraction failed")
 
-        await msg.edit_text(
-            "❌ دریافت اطلاعات ناموفق بود.\n"
-            "ممکن است لینک خصوصی، نامعتبر یا محدود شده باشد."
-        )
+    await msg.edit_text(
+        f"❌ خطای استخراج:\n\n{str(e)[:1500]}"
+    )
 
 
 # ================= DOWNLOAD ENGINE =================
