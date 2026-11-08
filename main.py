@@ -176,10 +176,8 @@ def download_media(url, quality, folder):
             }
         ]
     else:
-        format_string = (
-            f"bestvideo[height<={quality}]+bestaudio/"
-            f"best[height<={quality}]/best"
-        )
+        format_string = f"best[height<={quality}]/best
+        
         postprocessors = [
             {
                 "key": "FFmpegVideoRemuxer",
