@@ -85,7 +85,7 @@ async def handle_message(
         "⏳ در حال بررسی لینک..."
     )
 
-    try:
+        try:
         info = await asyncio.to_thread(extract_info, url)
 
         title = info.get("title") or "Media"
@@ -113,12 +113,11 @@ async def handle_message(
         )
 
     except Exception as e:
-    logger.exception("YouTube extraction failed")
+        logger.exception("YouTube extraction failed")
 
-    await msg.edit_text(
-        f"❌ خطای استخراج:\n\n{str(e)[:1500]}"
-    )
-
+        await msg.edit_text(
+            f"❌ خطای استخراج:\n\n{str(e)[:1500]}"
+        )
 
 # ================= DOWNLOAD ENGINE =================
 
