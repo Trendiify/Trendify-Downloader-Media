@@ -3,6 +3,7 @@ import asyncio
 import logging
 import secrets
 import tempfile
+import shutil
 from pathlib import Path
 
 import yt_dlp
@@ -54,73 +55,28 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # ================= DOWNLOAD INFO =================
-
 def extract_info(url):
-    options = {
-        "quiet": True,
-        "no_warnings": True,
-        "noplaylist": True,
-        "socket_timeout": 25,
-        "ffmpeg_location": FFMPEG_PATH,
-        "cookiefile": COOKIE_FILE,
-    }
+    with tempfile.TemporaryDirectory() as temp_dir:
 
-    with yt_dlp.YoutubeDL(options) as ydl:
-        return ydl.extract_info(url, download=False)
+        options = {
+            "quiet": True,
+            "no_warnings": True,
+            "noplaylist": True,
+            "socket_timeout": 30,
+            "ffmpeg_location": FFMPEG_PATH,
+            "format": "best/bestvideo+bestaudio",
+        }
 
+        if os.path.isfile(COOKIE_FILE):
+            temp_cookie = os.path.join(
+                temp_dir, "cookies.txt"
+            )
+            shutil.copyfile(COOKIE_FILE, temp_cookie)
+            options["cookiefile"] = temp_cookie
 
-async def handle_message(
-    update: Update,
-    context: ContextTypes.DEFAULT_TYPE
-):
-    if not update.message or not update.message.text:
-        return
+        with yt_dlp.YoutubeDL(options) as ydl:
+            return ydl.extract_info(url, download=False)
 
-    url = update.message.text.strip()
-
-    if not url.startswith(("https://", "http://")):
-        await update.message.reply_text(
-            "❌ لطفاً یک لینک معتبر ارسال کن."
-        )
-        return
-
-    msg = await update.message.reply_text(
-        "⏳ در حال بررسی لینک..."
-    )
-
-    try:
-        info = await asyncio.to_thread(extract_info, url)
-
-        title = info.get("title") or "Media"
-
-        context.user_data["url"] = url
-
-        keyboard = [
-            [
-                InlineKeyboardButton("1080p", callback_data="1080"),
-                InlineKeyboardButton("720p", callback_data="720"),
-                InlineKeyboardButton("480p", callback_data="480"),
-            ],
-            [
-                InlineKeyboardButton(
-                    "🎵 دانلود MP3",
-                    callback_data="mp3"
-                )
-            ]
-        ]
-
-        await msg.edit_text(
-            f"📌 {title}\n\n"
-            "کیفیت مورد نظر را انتخاب کن:",
-            reply_markup=InlineKeyboardMarkup(keyboard)
-        )
-
-    except Exception as e:
-        logger.exception("Media extraction failed")
-
-        await msg.edit_text(
-            f"❌ خطای استخراج:\n\n{str(e)[:1500]}"
-        )
 
 # ================= DOWNLOAD ENGINE =================
 
@@ -141,10 +97,8 @@ def download_media(url, quality, folder):
 
     else:
         format_string = (
-            f"bestvideo[height<={quality}]+bestaudio/"
             f"best[height<={quality}]/best"
         )
-
         postprocessors = []
 
     options = {
@@ -154,15 +108,18 @@ def download_media(url, quality, folder):
         "no_warnings": True,
         "noplaylist": True,
         "socket_timeout": 30,
-        "retries": 2,
-        "fragment_retries": 2,
+        "retries": 3,
+        "fragment_retries": 3,
         "max_filesize": MAX_FILE_SIZE,
         "ffmpeg_location": FFMPEG_PATH,
-        "merge_output_format": "mp4",
         "postprocessors": postprocessors,
         "overwrites": True,
-        "cookiefile": COOKIE_FILE,
     }
+
+    if os.path.isfile(COOKIE_FILE):
+        temp_cookie = os.path.join(folder, "cookies.txt")
+        shutil.copyfile(COOKIE_FILE, temp_cookie)
+        options["cookiefile"] = temp_cookie
 
     with yt_dlp.YoutubeDL(options) as ydl:
         ydl.download([url])
@@ -179,10 +136,7 @@ def download_media(url, quality, folder):
     result = max(files, key=lambda p: p.stat().st_mtime)
 
     if result.stat().st_size > MAX_FILE_SIZE:
-        raise Exception(
-            "حجم فایل بیشتر از محدودیت ارسال تلگرام است. "
-            "کیفیت پایین‌تری انتخاب کن."
-        )
+        raise Exception("حجم فایل بیشتر از محدودیت تلگرام است.")
 
     return str(result)
 
